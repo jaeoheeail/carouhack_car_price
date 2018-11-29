@@ -1,5 +1,5 @@
 import os
-import sys
+import json
 import numpy as np
 import pickle
 import pandas as pd
@@ -10,6 +10,7 @@ from predict_service import api
 from datetime import datetime
 
 model_path = os.path.dirname(os.path.realpath(__file__)) + '/data/model.pkl'
+summary_path = os.path.dirname(os.path.realpath(__file__)) + '/data/summary.json'
 
 COEFF_LIST = ['coe', 'num_owners', 'arf', 'mileage', 'good_mileage',
               'days_since_reg']
@@ -33,8 +34,19 @@ class Predict(restful.Resource):
                 prices.append(price)
             return prices
 
+        def get_summary(json_data):
+            # read summary json
+            print("getting summary")
+
+            with open(summary_path) as f:
+                summary_data = json.load(f)
+
+            summary = summary_data[json_data['make_model']]
+            print("summary:", summary)
+            return summary
+
         def get_predictions(json_data):
-            print("getting predictions:", json_data)
+            print("getting predictions")
 
             make_model, coe = json_data['make_model'], json_data['coe']
             # print(make_model, coe)
@@ -70,12 +82,15 @@ class Predict(restful.Resource):
             result = {"lower": selling_price[0],
                       "predicted": selling_price[1],
                       "upper": selling_price[2]}
-            print(result)
+            print("predictions:", result)
 
-            return jsonify(result)
+            return result
 
         json_data = request.get_json(force=True)
-        return get_predictions(json_data)
+        predictions = get_predictions(json_data)
+        summary_stats = get_summary(json_data)
+
+        return jsonify({"predictions": predictions, "summary_stats": summary_stats})
 
 
 class Root(restful.Resource):
