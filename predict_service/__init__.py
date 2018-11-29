@@ -3,7 +3,12 @@ from flask.ext import restful
 from flask import make_response
 from bson.json_util import dumps
 
+import generate_model as gm
+
 app = Flask(__name__)
+
+# generate model
+gm.generate()
 
 
 def output_json(obj, code, headers=None):
