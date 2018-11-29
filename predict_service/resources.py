@@ -93,13 +93,19 @@ class Predict(restful.Resource):
                       "upper": selling_price[2]}
             print("predictions:", result)
 
-            return result
+            depre_predictions = {"lower": lower[0],
+                                 "predicted": predicted[0],
+                                 "upper": upper[0]}
+
+            return [result, depre_predictions]
 
         json_data = request.get_json(force=True)
         predictions = get_predictions(json_data)
         summary_stats = get_summary(json_data)
 
-        return jsonify({"predictions": predictions, "summary_stats": summary_stats})
+        return jsonify({"predictions": predictions[0],
+                        "depre_predictions": predictions[1],
+                        "summary_stats": summary_stats})
 
 
 class Root(restful.Resource):
