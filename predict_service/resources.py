@@ -25,6 +25,14 @@ class Predict(restful.Resource):
             delta = datetime.today() - formatted_reg_date
             return delta.days
 
+        def get_selling_price(depre_value, car_reg_date, arf):
+            prices = []
+            months_since = calculate_days_since_reg(car_reg_date)/30
+            for v in depre_value:
+                price = months_since/12 * v + arf/2
+                prices.append(price)
+            return prices
+
         def get_predictions(json_data):
             print("getting predictions:", json_data)
 
@@ -56,7 +64,12 @@ class Predict(restful.Resource):
             predicted = pickle.loads(model["predicted"]).predict(x_new)
             upper = pickle.loads(model["upper"]).predict(x_new)
 
-            result = {"lower": lower[0], "upper": upper[0], "predicted": predicted[0]}
+            depre_value = (lower[0], predicted[0], upper[0])
+
+            selling_price = get_selling_price(depre_value, car_reg_date, arf)
+            result = {"lower": selling_price[0],
+                      "predicted": selling_price[1],
+                      "upper": selling_price[2]}
             print(result)
 
             return jsonify(result)
