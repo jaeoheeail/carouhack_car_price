@@ -69,7 +69,7 @@ def generate():
     alpha = 0.95
 
     for make_model in top_10:
-        print("Generating model for " + make_model)
+        # print("Generating model for " + make_model)
         df_m = df[df["make model"] == make_model]
 
         mileage_processed = []

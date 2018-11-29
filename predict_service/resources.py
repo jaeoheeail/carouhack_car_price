@@ -8,6 +8,7 @@ from flask import request, jsonify
 from flask.ext import restful
 from predict_service import api
 from datetime import datetime
+from dateutil.relativedelta import relativedelta
 
 model_path = os.path.dirname(os.path.realpath(__file__)) + '/data/model.pkl'
 summary_path = os.path.dirname(os.path.realpath(__file__)) + '/data/summary.json'
@@ -16,19 +17,27 @@ COEFF_LIST = ['coe', 'num_owners', 'arf', 'mileage', 'good_mileage',
               'days_since_reg']
 
 
+DATE_FORMAT = "%d/%m/%Y"
+
+
 class Predict(restful.Resource):
 
     def post(self):
         def calculate_days_since_reg(reg_date):
             print("calculating days since:", reg_date)
-            date_format = "%d/%m/%Y"
-            formatted_reg_date = datetime.strptime(reg_date, date_format)
-            delta = datetime.today() - formatted_reg_date
-            return delta.days
+            formatted_reg_date = datetime.strptime(reg_date, DATE_FORMAT)
+            delta = formatted_reg_date - datetime.today()
+            return np.abs(delta.days)
 
         def get_selling_price(depre_value, car_reg_date, arf):
             prices = []
-            months_since = calculate_days_since_reg(car_reg_date)/30
+
+            coe_expiry = datetime.strptime(car_reg_date, DATE_FORMAT)
+            coe_expiry = coe_expiry + relativedelta(years=10)
+            coe_expiry = datetime.strftime(coe_expiry, DATE_FORMAT)
+            print("COE:", coe_expiry)
+            months_since = calculate_days_since_reg(coe_expiry)/30
+            print(depre_value, arf, months_since)
             for v in depre_value:
                 price = months_since/12 * v + arf/2
                 prices.append(price)
